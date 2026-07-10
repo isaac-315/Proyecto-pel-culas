@@ -16,4 +16,5 @@ public class Usuario {
     private String email;
     private String password;
     private List<Perfil> perfiles = new ArrayList<>();
+    private String rol; // "USER" o "ADMIN"
 }

@@ -20,4 +20,5 @@ public class UsuarioDocument {
     private String email;
     private String password;
     private List<Perfil> perfiles;
+    private String rol;
 }

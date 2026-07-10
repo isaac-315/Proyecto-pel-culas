@@ -8,10 +8,10 @@ import org.springframework.stereotype.Component;
 public class UsuarioMapper {
 
     public Usuario toDomain(UsuarioDocument doc) {
-        return new Usuario(doc.getId(), doc.getEmail(), doc.getPassword(), doc.getPerfiles());
+        return new Usuario(doc.getId(), doc.getEmail(), doc.getPassword(), doc.getPerfiles(), doc.getRol());
     }
 
     public UsuarioDocument toDocument(Usuario user) {
-        return new UsuarioDocument(user.getId(), user.getEmail(), user.getPassword(), user.getPerfiles());
+        return new UsuarioDocument(user.getId(), user.getEmail(), user.getPassword(), user.getPerfiles(), user.getRol());
     }
 }
