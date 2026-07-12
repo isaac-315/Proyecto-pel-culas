@@ -1,13 +1,17 @@
 package ec.edu.ups.streaming.infrastructure.controller;
 
 import ec.edu.ups.streaming.application.service.ProduccionService;
+import ec.edu.ups.streaming.application.service.dto.ActorParticipacionReporte;
 import ec.edu.ups.streaming.domain.model.Pelicula;
 import ec.edu.ups.streaming.domain.model.Produccion;
 import ec.edu.ups.streaming.domain.model.Serie;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -16,6 +20,9 @@ public class ProduccionController {
 
     @Autowired
     private ProduccionService service;
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
     // ---------- Consultas (públicas) ----------
 
@@ -44,7 +51,8 @@ public class ProduccionController {
         return ResponseEntity.ok(service.buscarPorAnio(anio));
     }
 
-    // ---------- CRUD (exclusivo administradores — se restringe en el Paso 6 con JWT) ----------
+    // ---------- CRUD (exclusivo administradores — se restringe en el Paso 6 con
+    // JWT) ----------
 
     @PostMapping("/peliculas")
     public ResponseEntity<Produccion> crearPelicula(@RequestBody Pelicula pelicula) {
@@ -70,5 +78,32 @@ public class ProduccionController {
     public ResponseEntity<Void> eliminar(@PathVariable String id) {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ---------- Reportes ----------
+
+    @GetMapping("/reportes/estrenadas")
+    public ResponseEntity<List<Produccion>> produccionesEstrenadasEnRango(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
+        return ResponseEntity.ok(service.buscarPorRangoFechas(desde, hasta));
+    }
+
+    @GetMapping("/reportes/mas-reproducidas")
+    public ResponseEntity<List<Produccion>> produccionesConMasReproducciones(
+            @RequestParam(defaultValue = "10") int limite) {
+        return ResponseEntity.ok(service.produccionesConMasReproducciones(limite));
+    }
+
+    @GetMapping("/reportes/actor")
+    public ResponseEntity<List<Produccion>> produccionesPorActor(
+            @RequestParam String nombre) {
+        return ResponseEntity.ok(service.produccionesPorActor(nombre));
+    }
+
+    @GetMapping("/reportes/actores-mayor-participacion")
+    public ResponseEntity<List<ActorParticipacionReporte>> actoresConMasParticipaciones(
+            @RequestParam(defaultValue = "10") int limite) {
+        return ResponseEntity.ok(service.actoresConMasParticipaciones(limite));
     }
 }

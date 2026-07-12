@@ -1,12 +1,21 @@
 package ec.edu.ups.streaming.application.service;
 
+import ec.edu.ups.streaming.application.service.dto.ActorParticipacionReporte;
 import ec.edu.ups.streaming.domain.model.Produccion;
 import ec.edu.ups.streaming.infrastructure.persistance.mongo.document.ProduccionDocument;
 import ec.edu.ups.streaming.infrastructure.persistance.mongo.mapper.ProduccionMapper;
 import ec.edu.ups.streaming.infrastructure.persistance.mongo.repository.ProduccionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Sort;
 
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -19,6 +28,9 @@ public class ProduccionService {
 
     @Autowired
     private ProduccionMapper mapper;
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
     // ---------- CRUD (exclusivo para administradores; la restricción de rol se aplica en el controller/seguridad) ----------
 
@@ -79,5 +91,58 @@ public class ProduccionService {
         Date hasta = fin.getTime();
 
         return mapper.toDomainList(repository.findByFechaEstrenoBetween(desde, hasta));
+    }
+
+    // ---------- Reportes solicitados ----------
+
+    public List<Produccion> buscarPorRangoFechas(LocalDate desde, LocalDate hasta) {
+        if (desde.isAfter(hasta)) {
+            throw new RuntimeException("La fecha desde no puede ser mayor que la fecha hasta.");
+        }
+
+        ZoneId zona = ZoneId.systemDefault();
+
+        Date fechaDesde = Date.from(desde.atStartOfDay(zona).toInstant());
+        Date fechaHasta = Date.from(hasta.atTime(LocalTime.MAX).atZone(zona).toInstant());
+
+        return mapper.toDomainList(repository.findByFechaEstrenoBetween(fechaDesde, fechaHasta));
+    }
+
+    public List<Produccion> produccionesConMasReproducciones(int limite) {
+        if (limite <= 0) {
+            limite = 10;
+        }
+
+        return mapper.toDomainList(
+                repository.buscarProduccionesConMasReproducciones(PageRequest.of(0, limite))
+        );
+    }
+
+    public List<Produccion> produccionesPorActor(String nombreActor) {
+        return mapper.toDomainList(
+                repository.findByActoresPrincipalesNombreCompletoContainingIgnoreCase(nombreActor)
+        );
+    }
+
+    public List<ActorParticipacionReporte> actoresConMasParticipaciones(int limite) {
+        if (limite <= 0) {
+            limite = 10;
+        }
+
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.unwind("actoresPrincipales"),
+                Aggregation.group("actoresPrincipales.nombreCompleto")
+                        .count()
+                        .as("participaciones"),
+                Aggregation.project("participaciones")
+                        .and("_id")
+                        .as("actor"),
+                Aggregation.sort(Sort.Direction.DESC, "participaciones"),
+                Aggregation.limit(limite)
+        );
+
+        return mongoTemplate
+                .aggregate(aggregation, "producciones", ActorParticipacionReporte.class)
+                .getMappedResults();
     }
 }
