@@ -145,4 +145,9 @@ public class ProduccionService {
                 .aggregate(aggregation, "producciones", ActorParticipacionReporte.class)
                 .getMappedResults();
     }
+
+    public List<Produccion> listarPorTipo(String tipo) {
+        // repository.findByTipo nos trae los documentos, y toDomainList los convierte al dominio polimórfico
+        return mapper.toDomainList(repository.findByTipo(tipo));
+    }
 }

@@ -106,4 +106,15 @@ public class ProduccionController {
             @RequestParam(defaultValue = "10") int limite) {
         return ResponseEntity.ok(service.actoresConMasParticipaciones(limite));
     }
+
+    // ✨ ¡AGREGA ESTOS DOS AQUÍ! ✨
+    @GetMapping("/peliculas")
+    public ResponseEntity<List<Produccion>> listarSoloPeliculas() {
+        return ResponseEntity.ok(service.listarPorTipo("pelicula"));
+    }
+
+    @GetMapping("/series")
+    public ResponseEntity<List<Produccion>> listarSoloSeries() {
+        return ResponseEntity.ok(service.listarPorTipo("serie"));
+    }
 }
