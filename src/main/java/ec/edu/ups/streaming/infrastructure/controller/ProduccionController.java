@@ -6,7 +6,6 @@ import ec.edu.ups.streaming.domain.model.Pelicula;
 import ec.edu.ups.streaming.domain.model.Produccion;
 import ec.edu.ups.streaming.domain.model.Serie;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +20,7 @@ public class ProduccionController {
     @Autowired
     private ProduccionService service;
 
-    @Autowired
-    private MongoTemplate mongoTemplate;
+
 
     // ---------- Consultas (públicas) ----------
 
